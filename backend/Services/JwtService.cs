@@ -7,8 +7,8 @@ namespace CourseManagement.Services
 {
     public interface IJwtService
     {
-        string GenerateAccessToken(Guid userId, string name, string email, bool isAdmin);
-        string GenerateRefreshToken(Guid userId, string name, string email, bool isAdmin);
+        string GenerateAccessToken(Guid userId, string name, string email, bool isAdmin, string age);
+        string GenerateRefreshToken(Guid userId, string name, string email, bool isAdmin, string age);
         ClaimsPrincipal? ValidateToken(string token);
     }
 
@@ -21,7 +21,7 @@ namespace CourseManagement.Services
             _configuration = configuration;
         }
 
-        public string GenerateAccessToken(Guid userId, string name, string email, bool isAdmin)
+        public string GenerateAccessToken(Guid userId, string name, string email, bool isAdmin, string age)
         {
             var jwtSettings = _configuration.GetSection("JwtSettings");
             var secretKey = jwtSettings["SecretKey"];
@@ -39,7 +39,8 @@ namespace CourseManagement.Services
                 new Claim(ClaimTypes.Email, email),
                 new Claim("isAdmin", isAdmin.ToString()),
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-                new Claim(JwtRegisteredClaimNames.Iat, DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString(), ClaimValueTypes.Integer64)
+                new Claim(JwtRegisteredClaimNames.Iat, DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString(), ClaimValueTypes.Integer64),
+                new Claim("age", age)
             };
 
             var token = new JwtSecurityToken(
@@ -53,7 +54,7 @@ namespace CourseManagement.Services
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
 
-        public string GenerateRefreshToken(Guid userId, string name, string email, bool isAdmin)
+        public string GenerateRefreshToken(Guid userId, string name, string email, bool isAdmin, string age)
         {
             var jwtSettings = _configuration.GetSection("JwtSettings");
             var secretKey = jwtSettings["SecretKey"];
@@ -72,6 +73,7 @@ namespace CourseManagement.Services
                 new Claim("isAdmin", isAdmin.ToString()),
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
                 new Claim(JwtRegisteredClaimNames.Iat, DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString(), ClaimValueTypes.Integer64),
+                new Claim("age", age),
                 new Claim("tokenType", "refresh")
             };
 

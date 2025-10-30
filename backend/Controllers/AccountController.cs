@@ -40,12 +40,22 @@ namespace CourseManagement.Controllers
 
             if (user == null || user.Password != loginDto.Password)
             {
-                return Unauthorized(new { message = "Invalid email or password" });
+                return BadRequest(new { message = "Invalid email or password" });
             }
 
-            // Generate tokens
-            var accessToken = _jwtService.GenerateAccessToken(user.Id, user.Name, user.Email, user.IsAdmin);
-            var refreshToken = _jwtService.GenerateRefreshToken(user.Id, user.Name, user.Email, user.IsAdmin);
+            int age = 0;
+
+            if (user.DateOfBirth.HasValue)
+            {
+                var today = DateOnly.FromDateTime(DateTime.Today);
+                age = today.Year - user.DateOfBirth.Value.Year;
+
+                if (user.DateOfBirth.Value > today.AddYears(-age))
+                    age--;
+            }
+
+            var accessToken = _jwtService.GenerateAccessToken(user.Id, user.Name, user.Email, user.IsAdmin, age.ToString());
+            var refreshToken = _jwtService.GenerateRefreshToken(user.Id, user.Name, user.Email, user.IsAdmin, age.ToString());
 
             var jwtSettings = _configuration.GetSection("JwtSettings");
             var expirationMinutes = int.Parse(jwtSettings["AccessTokenExpirationMinutes"]!);
@@ -87,6 +97,7 @@ namespace CourseManagement.Controllers
             var userIdClaim = principal.FindFirst("userId")?.Value;
             var name = principal.FindFirst(ClaimTypes.Name)?.Value;
             var email = principal.FindFirst(ClaimTypes.Email)?.Value;
+            var age = principal.FindFirst("age")?.Value;
             var isAdminClaim = principal.FindFirst("isAdmin")?.Value;
             bool isAdmin = bool.TryParse(isAdminClaim, out var adminValue) && adminValue;
 
@@ -111,8 +122,8 @@ namespace CourseManagement.Controllers
             }
 
             // Generate new tokens
-            var newAccessToken = _jwtService.GenerateAccessToken(user.Id, user.Name, user.Email, user.IsAdmin);
-            var newRefreshToken = _jwtService.GenerateRefreshToken(user.Id, user.Name, user.Email, user.IsAdmin);
+            var newAccessToken = _jwtService.GenerateAccessToken(user.Id, user.Name, user.Email, user.IsAdmin, age);
+            var newRefreshToken = _jwtService.GenerateRefreshToken(user.Id, user.Name, user.Email, user.IsAdmin, age);
 
             var jwtSettings = _configuration.GetSection("JwtSettings");
             var expirationMinutes = int.Parse(jwtSettings["AccessTokenExpirationMinutes"]!);

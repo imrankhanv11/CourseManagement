@@ -73,7 +73,9 @@ namespace CourseManagement.Controllers
                     enrollmentId = e.EnrollmentId,
                     courseId = e.CourseId,
                     courseName = e.Course.Name,
-                    enrolledOn = e.EnrolledOn
+                    enrolledOn = e.EnrolledOn,
+                    duration = e.Course.DurationInMonths,
+                    startDate = e.Course.StartDate
                 }).ToList();
 
                 return Ok(enrollmentResponses);
