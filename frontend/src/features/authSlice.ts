@@ -85,17 +85,21 @@ const authSlice = createSlice({
                 state.error = action.payload;
             });
 
-        builder.addCase(
-            loginUser.fulfilled,
-            (state, action: PayloadAction<loginResponseType>) => {
-                state.isAuthenticated = true;
-                state.LoginDetails = {
-                    accessToken: action.payload.accessToken,
-                    refreshToken: action.payload.refreshToken,
-                    expireAt: action.payload.ExpiresAt,
-                };
-            }
-        );
+        builder
+            .addCase(
+                loginUser.fulfilled,
+                (state, action: PayloadAction<loginResponseType>) => {
+                    state.isAuthenticated = true;
+                    state.LoginDetails = {
+                        accessToken: action.payload.accessToken,
+                        refreshToken: action.payload.refreshToken,
+                        expireAt: action.payload.ExpiresAt,
+                    };
+                }
+            )
+            .addCase(loginUser.rejected, (state, action: PayloadAction<any>) => {
+                state.error = action.payload;
+            });
 
     },
 });

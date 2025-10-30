@@ -2,10 +2,10 @@ import React from "react";
 import { FaTrash, FaEdit } from "react-icons/fa"
 import { useDispatch } from "react-redux";
 import { type AppDispathStore } from "../../store/store";
-import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 import type { UserListType } from "../type/userListType";
 import { deleteUser, ediUser } from "../../features/userSlice";
+import Swal from "sweetalert2";
 
 interface UserListRowProbs {
     user: UserListType
@@ -17,14 +17,27 @@ const UserListRow: React.FC<UserListRowProbs> = ({ user }) => {
     const navigate = useNavigate();
 
     const deleteUserMethod = async (id: string) => {
-        try {
-            await dispatch(deleteUser(id)).unwrap();
-
-            toast.success("Deleted Succesfully");
-        }
-        catch (err: any) {
-            toast.error(err || "Faild");
-        }
+        Swal.fire({
+            title: "Are you sure?",
+            text: "Do you want to Delete this User?",
+            icon: "question",
+            showCancelButton: true,
+            confirmButtonText: "Yes, Delete",
+            cancelButtonText: "No, Cancel",
+            confirmButtonColor: "#198754",
+            cancelButtonColor: "#dc3545",
+        }).then(async (result) => {
+            if (result.isConfirmed) {
+                try {
+                    await dispatch(deleteUser(id)).unwrap;
+                    Swal.fire("Deleted!", "You have successfully Deleted.", "success");
+                } catch (error: any) {
+                    Swal.fire(error, "error");
+                }
+            } else {
+                Swal.fire("Cancelled", "You didn’t Delete the User.", "info");
+            }
+        })
     }
 
     const editUserMethod = (data: UserListType) => {

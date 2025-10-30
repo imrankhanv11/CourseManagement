@@ -5,10 +5,10 @@ import type { RootStateStore } from "../store/store";
 interface IJwtDecode {
     nameid: string,
     isAdmin: string,
-    dateOfBirth: string;
+    age: string;
 }
 
-const useDecodeToken = () => {
+const useDecodeAge = () => {
 
     const accesToken = useSelector((state: RootStateStore) => state.AuthStore.LoginDetails?.accessToken);
 
@@ -18,11 +18,12 @@ const useDecodeToken = () => {
 
     try {
         const decode = jwtDecode<IJwtDecode>(accesToken);
-        return decode.isAdmin;
+        const age: number = Number(decode.age);
+        return age;
     }
     catch {
         return null;
     }
 }
 
-export default useDecodeToken;
+export default useDecodeAge;

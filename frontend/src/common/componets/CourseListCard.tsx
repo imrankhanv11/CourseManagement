@@ -1,98 +1,136 @@
 import React from "react";
 import type { courseListType } from "../type/courseListType";
-import { FaPlus } from "react-icons/fa";
+import { FaCalendar, FaList, FaPlus } from "react-icons/fa";
 import { toast } from "react-toastify";
-import { apiErrorHandlers } from "../../apiErrorHandler/apiErrorHandler";
 import useDecodeToken from "../../hooks/useDecodeToken";
-import { api } from "../../api/api";
-import { PrivateEndPoints } from "../../api/endPoints";
-import { type IEnrollredCourses } from "../../pages/CourseListUser"
+import { Card, Button, Col } from "react-bootstrap";
+import { FaPerson, FaTimeline } from "react-icons/fa6";
+import { enrollCourse, type IEnrollredCourses } from "../../features/enrollSlice";
+import Swal from "sweetalert2";
+import { useDispatch } from "react-redux";
+import type { AppDispathStore } from "../../store/store";
+import useDecodeAge from "../../hooks/useDecodeAge";
 
 interface CourseListProps {
     course: courseListType;
-    enrollments: IEnrollredCourses[] | null
+    enrollments: IEnrollredCourses[]
 }
 
 const CourseListCard: React.FC<CourseListProps> = ({ course, enrollments }) => {
 
+    const dispatch = useDispatch<AppDispathStore>();
     const role = useDecodeToken();
+    const age: number | null = useDecodeAge();
 
     const enrollUser = async (id: number) => {
-        try {
-            
-            if (!enrollments) {
-                toast.error("Enrollment data not loaded. Please try again.");
-                return;
-            }
 
-            if (enrollments.length >= 3) {
-                toast.error("You are already enrolled in 3 courses. Please complete one before enrolling again.");
-                return;
-            }
-
-            const courseStart = new Date(course.startDate);
-            const courseEnd = new Date(courseStart);
-            courseEnd.setMonth(courseEnd.getMonth() + course.durationInMonths);
-
-            const overlappingCourses = enrollments.filter((c) => {
-                const cStart = new Date(c.enrolledOn);
-                const cEnd = new Date(cStart);
-                cEnd.setMonth(cEnd.getMonth() + course.durationInMonths);
-
-                return courseStart <= cEnd && courseEnd >= cStart;
-            });
-
-            if (overlappingCourses.length >= 3) {
-                toast.error("You cannot enroll in more than 3 overlapping courses.");
-                return;
-            }
-
-            await api.post(PrivateEndPoints.enrollment, { CourseId: id });
-            toast.success("Enrolled Successfully");
-
-        } catch (err: any) {
-            const response = apiErrorHandlers(err);
-            toast.error(response.message);
-            console.error(response.message);
+        if (!age) {
+            return;
         }
+
+        if (course.minimumRequiredAge > age) {
+            toast.error("Sorry, You can't enroll this course. Minimum age miss match")
+            return;
+        }
+
+        if (!enrollments) {
+            toast.error("Enrollment data not loaded. Please try again.");
+            return;
+        }
+
+        if (enrollments.length >= 3) {
+            toast.error("You are already enrolled in 3 courses. Please complete one before enrolling again.");
+            return;
+        }
+
+        const courseStart = new Date(course.startDate);
+        const courseEnd = new Date(courseStart);
+        courseEnd.setMonth(courseEnd.getMonth() + course.durationInMonths);
+
+        const overlappingCourses = enrollments.filter((c) => {
+            const cStart = new Date(c.startDate);
+            const cEnd = new Date(cStart);
+            cEnd.setMonth(cEnd.getMonth() + c.duration);
+
+            return courseStart <= cEnd && courseEnd >= cStart;
+        });
+
+        if (overlappingCourses.length >= 3) {
+            toast.error("You cannot enroll in more than 3 overlapping courses.");
+            return;
+        }
+
+        Swal.fire({
+            title: "Are you sure?",
+            text: "Do you want to enroll in this course?",
+            icon: "question",
+            showCancelButton: true,
+            confirmButtonText: "Yes, enroll",
+            cancelButtonText: "No, Cancel",
+            confirmButtonColor: "#198754",
+            cancelButtonColor: "#dc3545",
+        }).then(async (result) => {
+            if (result.isConfirmed) {
+                try {
+                    await dispatch(enrollCourse(id)).unwrap();
+                    Swal.fire("Enrolled!", "You have successfully enrolled.", "success");
+                } catch (error: any) {
+                    Swal.fire(error, "error");
+                }
+            } else {
+                Swal.fire("Cancelled", "You didn’t enroll in the course.", "info");
+            }
+        })
+
     };
 
     return (
-        <div className="col-md-4 mb-4">
-            <div className="card shadow-sm border-0 h-100">
-                <div className="card-body d-flex flex-column justify-content-between">
+        <Col md={4} className="mb-4">
+            <Card className="shadow-sm border-0 h-100 rounded-4">
+                <Card.Body className="d-flex flex-column justify-content-between">
                     <div>
-                        <h5 className="card-title text-primary">{course.name}</h5>
-                        <p className="card-text mb-1">
-                            <strong>Duration:</strong> {course.durationInMonths} months
-                        </p>
-                        <p className="card-text mb-1">
-                            <strong>Start Date:</strong> {new Date(course.startDate).toDateString()}
-                        </p>
-                        <p className="card-text mb-1">
-                            <strong>Min Age:</strong> {course.minimumRequiredAge}
-                        </p>
-                        <p className="card-text mb-1">
-                            <strong>Enrolled:</strong> {course.enrolledUsersCount}
-                        </p>
-                        <p className="card-text">
-                            <small className="text-muted">
-                                Created On: {new Date(course.createdOn).toDateString()}
-                            </small>
-                        </p>
+                        <Card.Title className="text-primary fw-bold text-center mb-3">
+                            {course.name}
+                        </Card.Title>
+                        <hr className="  text-info" />
+                        <Card.Text as="div" className="text-secondary">
+                            <p className="mb-1">
+                                <strong><FaTimeline color="blue" /> Duration:</strong> {course.durationInMonths} months
+                            </p>
+                            <p className="mb-1">
+                                <strong><FaCalendar color="blue" /> Start Date:</strong>{" "}
+                                {new Date(course.startDate).toDateString()}
+                            </p>
+                            <p className="mb-1">
+                                <strong><FaPerson color="blue" /> Min Age:</strong> {course.minimumRequiredAge}
+                            </p>
+                            <p className="mb-1">
+                                <strong><FaList color="blue" /> Enrolled:</strong> {course.enrolledUsersCount}
+                            </p>
+                        </Card.Text>
+
+                        <Card.Text className="text-muted text-end small">
+                            Created On: {new Date(course.createdOn).toDateString()}
+                        </Card.Text>
                     </div>
 
                     {role !== "True" && (
-                        <button
-                            className="btn btn-success mt-3 d-flex align-items-center justify-content-center gap-2"
+                        <Button
+                            variant="success"
+                            className="mt-3 fw-semibold d-flex align-items-center justify-content-center gap-2"
                             onClick={() => enrollUser(course.id)}
+                            style={{
+                                borderRadius: "12px",
+                                boxShadow: "0 4px 10px rgba(0, 128, 0, 0.2)",
+                                transition: "all 0.3s ease",
+                            }}
                         >
                             <FaPlus /> Enroll Now
-                        </button>
+                        </Button>
                     )}
-                </div>
-            </div>
-        </div>
+                </Card.Body>
+            </Card>
+        </Col>
     );
 };
 

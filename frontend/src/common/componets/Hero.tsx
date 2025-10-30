@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "react-bootstrap";
 
 const Hero: React.FC = () => {
-    
+
     const navigate = useNavigate();
 
     return (
@@ -16,7 +16,7 @@ const Hero: React.FC = () => {
             }}
             className=" border-bottom"
         >
-            <h1 className="fw-bold mb-3">Welcome to Our Onlice Course System</h1>
+            <h1 className="fw-bold mb-3">Welcome to Our Online Course System</h1>
             <p className="lead">
                 We Provide Good Course with lots of discounts and also we provide some free Courses
             </p>

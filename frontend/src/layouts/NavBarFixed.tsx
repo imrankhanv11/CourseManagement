@@ -24,18 +24,18 @@ const NavBarFixed: React.FC = () => {
 
             <Nav.Link
                 as={Link}
-                to="/profile"
-                className={`mx-2 ${isActive("/profile") ? "text-warning fw-semibold" : "text-white"}`}
+                to="/userCourse"
+                className={`mx-2 ${isActive("/userCourse") ? "text-warning fw-semibold" : "text-white"}`}
             >
-                Profile
+                Courses
             </Nav.Link>
 
             <Nav.Link
                 as={Link}
-                to="/userCourse"
-                className={`mx-2 ${isActive("/userCourse") ? "text-warning fw-semibold" : "text-white"}`}
+                to="/profile"
+                className={`mx-2 ${isActive("/profile") ? "text-warning fw-semibold" : "text-white"}`}
             >
-                Coursers
+                Profile
             </Nav.Link>
         </>
     );

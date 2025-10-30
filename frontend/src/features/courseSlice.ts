@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk, type PayloadAction } from "@reduxjs/toolkit";
-import {api} from "../api/api";
+import { api } from "../api/api";
 import { PrivateEndPoints } from "../api/endPoints";
 import type { courseListType } from "../common/type/courseListType";
 import type { addCourseData } from "../common/schema/addCourseSchema";
@@ -47,7 +47,8 @@ export const deleteCourse = createAsyncThunk(
 )
 
 export const updateCourse = createAsyncThunk(
-    "course/editCorse", async (data:
+    "course/editCorse",
+    async (data:
         {
             id: number,
             name: string,
@@ -55,15 +56,29 @@ export const updateCourse = createAsyncThunk(
             startDate: string,
             minimumRequiredAge: number
         }, { rejectWithValue }) => {
-    try {
-        await api.put(PrivateEndPoints.EDIT_COURSE, data);
-        return data;
+        try {
+            await api.put(PrivateEndPoints.EDIT_COURSE, data);
+            return data;
+        }
+        catch (err: any) {
+            const responseError = apiErrorHandlers(err);
+            return rejectWithValue(responseError);
+        }
     }
-    catch (err: any) {
-        const responseError = apiErrorHandlers(err);
-        return rejectWithValue(responseError);
+);
+
+export const enrollmentsOfUser = createAsyncThunk(
+    "course/enrollment",
+    async (_, { rejectWithValue }) => {
+        try {
+            const response = await api.get(PrivateEndPoints.GetEnrollment);
+            return response.data;
+        }
+        catch (err: any) {
+            const responseError = apiErrorHandlers(err);
+            return rejectWithValue(responseError.message);
+        }
     }
-}
 )
 
 interface CourseResponse {
@@ -82,14 +97,14 @@ interface CourseState {
     items: courseListType[],
     loading: boolean,
     error: string | null,
-    editItem: courseListType | null
+    editItem: courseListType | null,
 }
 
 const initialState: CourseState = {
     items: [],
     loading: false,
     error: null,
-    editItem: null
+    editItem: null,
 }
 
 const CourseSlice = createSlice({
